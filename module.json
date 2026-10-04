@@ -1,0 +1,17 @@
+{
+  "id": "pallarium-link",
+  "name": "Pallarium Link",
+  "icon": "🔗",
+  "description": "Pair two Pallarium PCs. Tell me to install a program or send a whitelisted action to the other one. Pairing code, signed requests, approval on the receiving PC.",
+  "ui": [
+    "pallarium-link.js"
+  ],
+  "mcp": {
+    "command": "node",
+    "args": [
+      "C:/Users/nikol/.pallarium/modules/pallarium-link/link-server.js"
+    ]
+  },
+  "enabled": true,
+  "created_at": "2026-10-04T12:57:37-04:00"
+}
