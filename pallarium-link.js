@@ -44,21 +44,19 @@
     // ▲▲▲ YOUR FEATURE ▲▲▲
   }
 
-  // ---- floating icon: drag to move, double-click to detach / re-attach a transparent window ----
-  var SK = 'pl-float-pos', pos = { x: innerWidth - 200, y: 2 };
-  try { pos = JSON.parse(localStorage.getItem(SK)) || pos; } catch (e) {}
+  // ---- floating icon: double-click to open / re-attach a transparent window ----
+  var pos = { x: 200, y: 0 };
   var ico = document.createElement('div'); ico.id = 'pl-ico';
-  ico.innerHTML = '<style>#pl-ico{position:fixed;z-index:99997;width:44px;height:44px;border-radius:11px;display:grid;place-items:center;cursor:grab;user-select:none;opacity:.6;transition:opacity .2s,box-shadow .2s;' +
-    'background:radial-gradient(circle at 30% 25%,rgba(150,110,255,.55),rgba(30,20,60,.35));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.22);box-shadow:0 6px 22px rgba(0,0,0,.35)}' +
-    '#pl-ico:hover{opacity:1;box-shadow:0 0 18px rgba(130,90,255,.6)}#pl-ico i{position:absolute;right:3px;top:3px;width:9px;height:9px;border-radius:50%;background:#777;border:1px solid rgba(0,0,0,.4)}#pl-ico.on i{background:#3ddc84;box-shadow:0 0 6px #3ddc84}#pl-ico.req i{background:#f2ad0d;animation:plp 1s infinite}' +
+  ico.innerHTML = '<style>#pl-ico{position:fixed;z-index:99997;top:6px;right:150px;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;cursor:pointer;user-select:none;-webkit-app-region:no-drag;opacity:.75;transition:opacity .2s,box-shadow .2s;' +
+    'color:var(--accent,#f5a623);background:color-mix(in srgb,var(--accent,#f5a623) 10%,var(--surface,#14121a));border:1px solid color-mix(in srgb,var(--accent,#f5a623) 45%,transparent);box-shadow:none}' +
+    '#pl-ico:hover{opacity:1;box-shadow:0 0 12px color-mix(in srgb,var(--accent,#f5a623) 55%,transparent)}#pl-ico i{position:absolute;right:3px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--muted,#777);border:1px solid var(--surface,#14121a)}#pl-ico.on i{background:var(--accent,#f5a623);box-shadow:0 0 6px var(--accent,#f5a623)}#pl-ico.req i{background:#f2ad0d;animation:plp 1s infinite}' +
     '@keyframes plp{50%{transform:scale(1.5)}}' +
     '#pl-win{position:fixed;z-index:99996;width:340px;max-height:70vh;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.22);box-shadow:0 12px 40px rgba(0,0,0,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}' +
     '#pl-win .pl-h{padding:7px 12px;font:700 12px system-ui;color:#fff;background:rgba(40,30,80,.55);cursor:grab;display:flex;justify-content:space-between;user-select:none}' +
     '#pl-win .pl-bd{overflow:auto;flex:1;opacity:.94}#pl-win .pallarium-link-look{background:rgba(228,232,222,.82)}</style>' +
-    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><i></i>';
+    '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><i></i>';
   document.body.appendChild(ico);
   function place(el, p) { el.style.left = Math.max(0, Math.min(innerWidth - 44, p.x)) + 'px'; el.style.top = Math.max(0, Math.min(innerHeight - 44, p.y)) + 'px'; }
-  place(ico, pos);
   function drag(handle, move, done) {
     handle.addEventListener('mousedown', function (e) {
       if (e.button !== 0) return; var sx = e.clientX, sy = e.clientY, moved = false;
@@ -67,17 +65,15 @@
       addEventListener('mousemove', mv); addEventListener('mouseup', up); e.preventDefault();
     });
   }
-  var base = { x: 0, y: 0 };
-  ico.addEventListener('mousedown', function () { base = { x: pos.x, y: pos.y }; }, true);
-  drag(ico, function (dx, dy) { pos = { x: base.x + dx, y: base.y + dy }; place(ico, pos); }, function () { try { localStorage.setItem(SK, JSON.stringify(pos)); } catch (e) {} });
   var win = null, stop = null, wpos = null;
   function closeWin() { if (stop) stop(); if (win) win.remove(); win = null; stop = null; }
-  ico.addEventListener('dblclick', function () {
+  ico.addEventListener('click', function () {
     if (win) return closeWin();
     win = document.createElement('div'); win.id = 'pl-win';
     win.innerHTML = '<div class="pl-h"><span>Pallarium Link</span><span style="cursor:pointer" id="pl-wx">✕</span></div><div class="pl-bd"></div>';
     document.body.appendChild(win);
-    wpos = wpos || { x: Math.max(8, Math.min(innerWidth - 348, pos.x - 150)), y: pos.y + 54 };
+    var ir = ico.getBoundingClientRect();
+    wpos = wpos || { x: Math.max(8, Math.min(innerWidth - 348, ir.left - 150)), y: ir.bottom + 24 };
     win.style.left = wpos.x + 'px'; win.style.top = wpos.y + 'px';
     var wb = { x: 0, y: 0 };
     win.querySelector('.pl-h').addEventListener('mousedown', function () { wb = { x: wpos.x, y: wpos.y }; }, true);
@@ -85,7 +81,7 @@
     win.querySelector('#pl-wx').onclick = closeWin;
     stop = build(win.querySelector('.pl-bd'), true);
   });
-  ico.title = 'Pallarium Link — drag to move, double-click to detach';
+  ico.title = 'Pallarium Link — double-click to open';
   var tick = setInterval(function () {
     fetch('http://127.0.0.1:8777/local/state', { headers: { 'x-link': '1' } }).then(function (r) { return r.json(); }).then(function (s) {
       ico.classList.add('on'); ico.classList.toggle('req', s.pending.length > 0);

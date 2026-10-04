@@ -9,7 +9,8 @@
   "mcp": {
     "command": "node",
     "args": [
-      "C:/Users/nikol/.pallarium/modules/pallarium-link/link-server.js"
+      "-e",
+      "require(require('path').join(require('os').homedir(),'.pallarium','modules','pallarium-link','link-server.js'))"
     ]
   },
   "enabled": true,
