@@ -41,14 +41,14 @@ async function perform(job) {
 const body = req => new Promise(r => { let b = ''; req.on('data', d => { b += d; if (b.length > 1e5) req.destroy(); }); req.on('end', () => r(b)); });
 const json = (res, c, o, h) => { res.writeHead(c, Object.assign({ 'Content-Type': 'application/json' }, h || {})); res.end(JSON.stringify(o)); };
 const localOK = req => /^(::1|::ffff:)?127\.0\.0\.1$|^::1$/.test(req.socket.remoteAddress) || req.socket.remoteAddress === '::ffff:127.0.0.1';
-const originOK = o => !o || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o);
+const originOK = o => !o || o === 'null' || !/^https?:/.test(o) || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o);
 const ips = () => Object.values(os.networkInterfaces()).flat().filter(i => i.family === 'IPv4' && !i.internal).map(i => i.address);
 
 http.createServer(async (req, res) => {
   const url = req.url.split('?')[0];
   try {
     if (url.startsWith('/local/')) {
-      if (!localOK(req) || !originOK(req.headers.origin) || req.headers['x-link'] !== '1') return json(res, 403, { error: 'forbidden' });
+      if (!localOK(req) || !originOK(req.headers.origin) || (req.method !== 'OPTIONS' && req.headers['x-link'] !== '1')) return json(res, 403, { error: 'forbidden' });
       const cors = { 'Access-Control-Allow-Origin': req.headers.origin || '*', 'Access-Control-Allow-Headers': 'x-link,content-type' };
       if (req.method === 'OPTIONS') { res.writeHead(204, cors); return res.end(); }
       const b = req.method === 'POST' ? JSON.parse((await body(req)) || '{}') : {};

@@ -25,15 +25,17 @@
       '.pl-log{font:11px ui-monospace,monospace;color:var(--muted);max-height:140px;overflow:auto}</style>' +
       '<h2 style="margin:0 0 14px">Pallarium Link</h2><div id="pl-off" class="pl-card" style="display:none">Link server is not running yet. Enable the module and allow it in Settings, then reopen.</div>' +
       '<div id="pl-me" class="pl-card"></div><div id="pl-pend"></div><div id="pl-peers" class="pl-card"></div><div class="pl-card"><h3>Log</h3><div id="pl-log" class="pl-log"></div></div>';
+    var showIp = false;
     var q = function (s) { return body.querySelector(s); };
     function render(s) {
       q('#pl-off').style.display = 'none';
-      q('#pl-me').innerHTML = '<h3>This PC: ' + esc(s.name) + '</h3><div class="pl-m">Address: ' + s.ips.map(function (i) { return esc(i) + ':' + s.port; }).join(' · ') + '</div>' +
+      q('#pl-me').innerHTML = '<h3>This PC: ' + esc(s.name) + '</h3><div class="pl-m">Address: ' + (showIp ? s.ips.map(function (i) { return esc(i) + ':' + s.port; }).join(' · ') : '••••••••') + ' <a href="#" id="pl-ip" style="color:var(--accent)">' + (showIp ? 'hide' : 'show') + '</a></div>' +
         '<div style="margin-top:12px">' + (s.code ? '<div class="pl-code">' + esc(s.code) + '</div><div class="pl-m">Tell the other PC: pair with this address and this code. Valid 5 minutes, one use.</div>' : '<button class="pl-b" id="pl-gen">Make pairing code</button>') + '</div>';
+      q('#pl-ip').onclick = function (e) { e.preventDefault(); showIp = !showIp; render(s); };
       var g = q('#pl-gen'); if (g) g.onclick = function () { post('code').then(poll); };
       q('#pl-pend').innerHTML = s.pending.map(function (j) { return '<div class="pl-card pl-pend"><h3>' + esc(j.from) + ' wants to ' + esc(j.action) + '</h3><div class="pl-m">' + esc(JSON.stringify(j.args)) + '</div><div style="margin-top:10px;display:flex;gap:8px"><button class="pl-b" data-a="1" data-id="' + j.id + '">Approve</button><button class="pl-b r" data-a="0" data-id="' + j.id + '">Deny</button></div></div>'; }).join('');
       q('#pl-pend').querySelectorAll('button').forEach(function (b) { b.onclick = function () { post('approve', { id: b.dataset.id, yes: b.dataset.a === '1' }).then(poll); }; });
-      q('#pl-peers').innerHTML = '<h3>Paired PCs</h3>' + (s.peers.length ? s.peers.map(function (p) { return '<div class="pl-row"><span><b>' + esc(p.name) + '</b> <span class="pl-m">' + esc(p.host) + '</span></span><label class="pl-m"><input type="checkbox" data-auto="' + p.id + '"' + (p.auto ? ' checked' : '') + '> auto-approve their requests</label><button class="pl-b g" data-un="' + p.id + '">Unpair</button></div>'; }).join('') : '<div class="pl-m">None yet. Make a code here, then on the other PC ask Pallarium: "pair with ' + (s.ips[0] || 'IP') + ' code XXXXXXXX".</div>');
+      q('#pl-peers').innerHTML = '<h3>Paired PCs</h3>' + (s.peers.length ? s.peers.map(function (p) { return '<div class="pl-row"><span><b>' + esc(p.name) + '</b> <span class="pl-m">' + (showIp ? esc(p.host) : '••••') + '</span></span><label class="pl-m"><input type="checkbox" data-auto="' + p.id + '"' + (p.auto ? ' checked' : '') + '> auto-approve their requests</label><button class="pl-b g" data-un="' + p.id + '">Unpair</button></div>'; }).join('') : '<div class="pl-m">None yet. Make a code here, then on the other PC ask Pallarium: "pair with ' + (showIp ? (s.ips[0] || 'IP') : 'IP') + ' code XXXXXXXX".</div>');
       q('#pl-peers').querySelectorAll('[data-auto]').forEach(function (c) { c.onchange = function () { post('auto', { id: c.dataset.auto, on: c.checked }); }; });
       q('#pl-peers').querySelectorAll('[data-un]').forEach(function (b) { b.onclick = function () { post('unpair', { id: b.dataset.un }).then(poll); }; });
       q('#pl-log').innerHTML = s.log.map(function (l) { return new Date(l.t).toLocaleTimeString() + '  ' + esc(l.m); }).join('<br>') || 'Nothing yet.';
